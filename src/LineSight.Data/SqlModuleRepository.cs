@@ -33,8 +33,20 @@ public sealed class SqlModuleRepository(SqlConnectionFactory connections) : IMod
                 .ToList());
     }
 
-    public Task<IReadOnlyList<ModuleSummary>> GetRecentAsync(int take, CancellationToken ct = default) =>
-        throw new NotImplementedException();
+    public async Task<IReadOnlyList<ModuleSummary>> GetRecentAsync(int take, CancellationToken ct = default)
+    {
+        await using var connection = connections.Create();
+        var rows = await connection.QueryAsync<SummaryRow>(new CommandDefinition(
+            "dbo.usp_GetRecentModules", new { Take = take }, commandType: CommandType.StoredProcedure, cancellationToken: ct));
+
+        return rows.Select(r => new ModuleSummary(
+                r.SerialNumber,
+                SqlTypes.ParseEnum<ModuleStatus>(r.Status),
+                SqlTypes.AsUtc(r.CreatedUtc),
+                r.LastStation,
+                SqlTypes.AsUtc(r.LastStepUtc)))
+            .ToList();
+    }
 
     public async Task RecordStepAsync(string serialNumber, int stationId, StepResult result, DateTime timestampUtc,
         ModuleStatus newStatus, CancellationToken ct = default)
@@ -56,6 +68,15 @@ public sealed class SqlModuleRepository(SqlConnectionFactory connections) : IMod
         public string SerialNumber { get; set; } = "";
         public string Status { get; set; } = "";
         public DateTime CreatedUtc { get; set; }
+    }
+
+    private sealed class SummaryRow
+    {
+        public string SerialNumber { get; set; } = "";
+        public string Status { get; set; } = "";
+        public DateTime CreatedUtc { get; set; }
+        public string? LastStation { get; set; }
+        public DateTime? LastStepUtc { get; set; }
     }
 
     private sealed class StepRow

@@ -1,3 +1,4 @@
+using LineSight.Core.Abstractions;
 using LineSight.Core.Contracts;
 using LineSight.Core.Traceability;
 using Microsoft.AspNetCore.Mvc;
@@ -7,8 +8,28 @@ namespace LineSight.Api.Controllers;
 /// <summary>Serialized module tracking (WIP + genealogy).</summary>
 [ApiController]
 [Route("api/modules")]
-public sealed class ModulesController(TraceabilityService traceability, TimeProvider clock) : ControllerBase
+public sealed class ModulesController(
+    TraceabilityService traceability,
+    IModuleRepository modules,
+    TimeProvider clock) : ControllerBase
 {
+    /// <summary>The most recently started modules, newest first (for WIP lists and quick lookup).</summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<ModuleSummaryResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetRecent([FromQuery] int take = 20, CancellationToken ct = default)
+    {
+        if (take is < 1 or > 100)
+        {
+            ModelState.AddModelError(nameof(take), "take must be between 1 and 100.");
+            return ValidationProblem(ModelState);
+        }
+
+        var recent = await modules.GetRecentAsync(take, ct);
+        return Ok(recent.Select(m => new ModuleSummaryResponse(
+            m.SerialNumber, m.Status, m.CreatedUtc, m.LastStation, m.LastStepUtc)).ToList());
+    }
+
     /// <summary>Record a module passing or being scrapped at a station. Station order is enforced.</summary>
     [HttpPost("{serial}/steps")]
     [ProducesResponseType<RecordedStepResponse>(StatusCodes.Status200OK)]

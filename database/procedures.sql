@@ -254,3 +254,31 @@ BEGIN
     ORDER BY st.Sequence, ms.TimestampUtc;
 END;
 GO
+
+/* ---------------------------------------------------------------------
+   usp_GetRecentModules - newest modules first, with the last station
+   each one reached (for WIP lists on the dashboard).
+   --------------------------------------------------------------------- */
+CREATE OR ALTER PROCEDURE dbo.usp_GetRecentModules
+    @Take INT = 20
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT  TOP (@Take)
+            m.SerialNumber,
+            m.Status,
+            m.CreatedUtc,
+            last.StationName  AS LastStation,
+            last.TimestampUtc AS LastStepUtc
+    FROM    dbo.Modules AS m
+    OUTER APPLY (
+            SELECT TOP (1) st.Name AS StationName, ms.TimestampUtc
+            FROM   dbo.ModuleSteps AS ms
+            JOIN   dbo.Stations    AS st ON st.Id = ms.StationId
+            WHERE  ms.ModuleId = m.Id
+            ORDER  BY st.Sequence DESC
+    ) AS last
+    ORDER BY m.Id DESC;   -- identity order = creation order
+END;
+GO
