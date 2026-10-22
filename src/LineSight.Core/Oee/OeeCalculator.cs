@@ -51,6 +51,26 @@ public static class OeeCalculator
     }
 
     /// <summary>Combines the three factors into an <see cref="OeeResult"/>.</summary>
-    public static OeeResult Calculate(OeeInput input) =>
-        throw new NotImplementedException();
+    public static OeeResult Calculate(OeeInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+
+        var availability = Availability(input.RunTimeSeconds, input.PlannedProductionTimeSeconds);
+        var performance = Performance(input.IdealCycleTimeSeconds, input.TotalCount, input.RunTimeSeconds);
+        var quality = Quality(input.GoodCount, input.TotalCount);
+
+        // Multiply the unrounded factors, then round once at the end, so display rounding
+        // of the individual factors can't leak into the headline OEE number.
+        var oee = availability * performance * quality;
+
+        return new OeeResult(
+            Round(availability),
+            Round(performance),
+            Round(quality),
+            Round(oee),
+            PerformanceAboveIdeal: performance > 1.0);
+    }
+
+    /// <summary>4 decimals = 0.01% resolution, plenty for a percentage on a dashboard.</summary>
+    private static double Round(double value) => Math.Round(value, 4, MidpointRounding.AwayFromZero);
 }
