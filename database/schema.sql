@@ -56,7 +56,9 @@ GO
 
 -- Serves both "events for station X between two times" (OEE) and "latest event per station".
 -- INCLUDE makes it covering, so those queries never touch the base table.
-CREATE INDEX IX_MachineEvents_Station_Timestamp
+-- UNIQUE: a station reports at most once per timestamp, which makes retried events idempotent
+-- (see usp_RecordMachineEvent).
+CREATE UNIQUE INDEX UX_MachineEvents_Station_Timestamp
     ON dbo.MachineEvents (StationId, TimestampUtc)
     INCLUDE (State, DowntimeReason, GoodCount, ScrapCount);
 GO

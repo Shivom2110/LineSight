@@ -8,6 +8,11 @@ GO
 
 /* ---------------------------------------------------------------------
    usp_RecordMachineEvent - insert one PLC status report, return its Id.
+
+   Idempotent: if the same station already reported at the same timestamp,
+   the existing Id is returned instead of inserting a duplicate. A sender
+   that retries after a timeout (when the first attempt actually succeeded)
+   therefore can't double-count parts.
    --------------------------------------------------------------------- */
 CREATE OR ALTER PROCEDURE dbo.usp_RecordMachineEvent
     @StationId      INT,
@@ -22,6 +27,15 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM dbo.Stations WHERE Id = @StationId)
         THROW 50001, 'Unknown station.', 1;
+
+    DECLARE @ExistingId BIGINT =
+        (SELECT Id FROM dbo.MachineEvents WHERE StationId = @StationId AND TimestampUtc = @TimestampUtc);
+
+    IF @ExistingId IS NOT NULL
+    BEGIN
+        SELECT @ExistingId AS Id;
+        RETURN;
+    END;
 
     INSERT INTO dbo.MachineEvents (StationId, State, DowntimeReason, GoodCount, ScrapCount, TimestampUtc)
     OUTPUT INSERTED.Id
@@ -45,7 +59,7 @@ BEGIN
             latest.DowntimeReason AS DowntimeReason,
             latest.TimestampUtc   AS LastEventUtc
     FROM    dbo.Stations AS s
-    -- OUTER APPLY + TOP (1) = "latest event per station" (a seek on IX_MachineEvents_Station_Timestamp).
+    -- OUTER APPLY + TOP (1) = "latest event per station" (a seek on UX_MachineEvents_Station_Timestamp).
     OUTER APPLY (
             SELECT TOP (1) e.State, e.DowntimeReason, e.TimestampUtc
             FROM   dbo.MachineEvents AS e
