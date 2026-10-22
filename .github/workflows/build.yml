@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    # windows-latest because the WPF dashboard targets net8.0-windows.
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore LineSight.sln
+
+      - name: Build
+        run: dotnet build LineSight.sln --configuration Release --no-restore
+
+      # Unit + API tests use in-memory fakes, so no SQL Server is needed in CI.
+      - name: Test
+        run: dotnet test LineSight.sln --no-build --configuration Release --verbosity normal
