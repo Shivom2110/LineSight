@@ -1,0 +1,13 @@
+# Optional: SQL Server in Docker instead of LocalDB (macOS/Linux, or Windows without LocalDB).
+#   docker compose up -d
+# Connection string: Server=localhost,1433;Database=LineSight;User Id=sa;Password=LineSight!Passw0rd;TrustServerCertificate=True
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64          # runs under Rosetta on Apple Silicon
+    container_name: linesight-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "LineSight!Passw0rd"   # local dev only
+    ports:
+      - "1433:1433"
