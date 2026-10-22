@@ -15,6 +15,15 @@ public sealed class InMemoryModuleRepository(IReadOnlyList<Station>? stations = 
     public Task<Module?> GetBySerialAsync(string serialNumber, CancellationToken ct = default) =>
         Task.FromResult(Modules.GetValueOrDefault(serialNumber));
 
+    public Task<IReadOnlyList<ModuleSummary>> GetRecentAsync(int take, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<ModuleSummary>>(Modules.Values
+            .OrderByDescending(m => m.CreatedUtc)
+            .Take(take)
+            .Select(m => new ModuleSummary(m.SerialNumber, m.Status, m.CreatedUtc,
+                m.Steps.MaxBy(s => s.StationSequence)?.StationName,
+                m.Steps.MaxBy(s => s.StationSequence)?.TimestampUtc))
+            .ToList());
+
     public Task RecordStepAsync(string serialNumber, int stationId, StepResult result, DateTime timestampUtc,
         ModuleStatus newStatus, CancellationToken ct = default)
     {

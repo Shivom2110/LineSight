@@ -33,6 +33,9 @@ public sealed class SqlModuleRepository(SqlConnectionFactory connections) : IMod
                 .ToList());
     }
 
+    public Task<IReadOnlyList<ModuleSummary>> GetRecentAsync(int take, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
     public async Task RecordStepAsync(string serialNumber, int stationId, StepResult result, DateTime timestampUtc,
         ModuleStatus newStatus, CancellationToken ct = default)
     {

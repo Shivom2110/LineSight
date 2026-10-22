@@ -49,3 +49,11 @@ public sealed record ModuleStepResponse(
     int StationSequence,
     StepResult Result,
     DateTime TimestampUtc);
+
+/// <summary>GET /api/modules item (most recent modules, newest first).</summary>
+public sealed record ModuleSummaryResponse(
+    string SerialNumber,
+    ModuleStatus Status,
+    DateTime CreatedUtc,
+    string? LastStation,
+    DateTime? LastStepUtc);

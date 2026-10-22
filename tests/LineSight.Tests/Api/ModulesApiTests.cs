@@ -81,4 +81,32 @@ public sealed class ModulesApiTests : IDisposable
         Assert.Equal(ModuleStatus.Completed, genealogy.Status);
         Assert.Equal([1, 2, 3, 4, 5], genealogy.Steps.Select(s => s.StationSequence));
     }
+
+    [Fact]
+    public async Task RecentModules_AreNewestFirst_WithTheirLastStation()
+    {
+        var t0 = new DateTime(2026, 10, 22, 8, 0, 0, DateTimeKind.Utc);
+        await _client.PostAsJsonAsync("/api/modules/FS-20261022-00001/steps",
+            new RecordModuleStepRequest(TestLine.Deposition.Id, StepResult.Pass, t0), LineSightJson.Options);
+        await _client.PostAsJsonAsync("/api/modules/FS-20261022-00001/steps",
+            new RecordModuleStepRequest(TestLine.LaserScribe.Id, StepResult.Pass, t0.AddSeconds(5)), LineSightJson.Options);
+        await _client.PostAsJsonAsync("/api/modules/FS-20261022-00002/steps",
+            new RecordModuleStepRequest(TestLine.Deposition.Id, StepResult.Pass, t0.AddSeconds(2)), LineSightJson.Options);
+
+        var recent = await _client.GetFromJsonAsync<List<ModuleSummaryResponse>>("/api/modules?take=10", LineSightJson.Options);
+
+        Assert.NotNull(recent);
+        Assert.Equal(["FS-20261022-00002", "FS-20261022-00001"], recent.Select(m => m.SerialNumber));
+        Assert.Equal("Laser Scribe", recent[1].LastStation);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task RecentModules_WithTakeOutOfRange_Returns400(int take)
+    {
+        var response = await _client.GetAsync($"/api/modules?take={take}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
