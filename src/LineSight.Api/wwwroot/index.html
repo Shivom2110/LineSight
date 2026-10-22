@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LineSight MES</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22h18M9 22V12m7 10V8m7 14v-6' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7"/><path d="M7 22h18M9 22V12m7 10V8m7 14v-6"/></svg>
+      </div>
+      <div>
+        <h1>LineSight</h1>
+        <p class="subtitle">Thin-film module line &middot; MES dashboard</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="segmented" role="group" aria-label="OEE time window" id="window-picker">
+        <button type="button" data-minutes="15" class="active">15 min</button>
+        <button type="button" data-minutes="60">1 h</button>
+        <button type="button" data-minutes="480">8 h</button>
+      </div>
+      <div class="connection" id="connection" aria-live="polite">
+        <span class="dot"></span><span class="label">Connecting&hellip;</span>
+      </div>
+      <button type="button" class="icon-button" id="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Line-level KPIs: one hero number, then supporting stat tiles -->
+    <section class="kpis" aria-label="Line summary">
+      <div class="tile hero">
+        <div class="tile-label">Average station OEE</div>
+        <div class="tile-value" id="kpi-oee">&ndash;</div>
+        <div class="tile-note" id="kpi-oee-note">&nbsp;</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Modules completed</div>
+        <div class="tile-value" id="kpi-completed">&ndash;</div>
+        <div class="tile-note" id="kpi-completed-note">&nbsp;</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Scrapped</div>
+        <div class="tile-value" id="kpi-scrap">&ndash;</div>
+        <div class="tile-note" id="kpi-scrap-note">&nbsp;</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Downtime</div>
+        <div class="tile-value" id="kpi-downtime">&ndash;</div>
+        <div class="tile-note" id="kpi-downtime-note">&nbsp;</div>
+      </div>
+    </section>
+
+    <!-- The line itself: one card per station, in routing order -->
+    <section class="panel" aria-labelledby="line-title">
+      <div class="panel-head">
+        <h2 id="line-title">Production line</h2>
+        <div class="legend" aria-label="State legend">
+          <span class="state-chip running"><span class="state-icon"></span>Running</span>
+          <span class="state-chip idle"><span class="state-icon"></span>Idle</span>
+          <span class="state-chip down"><span class="state-icon"></span>Down</span>
+        </div>
+      </div>
+      <div class="line" id="line">
+        <div class="empty">Waiting for the API&hellip;</div>
+      </div>
+      <details class="table-view">
+        <summary>Show as table</summary>
+        <div class="table-wrap"><table id="station-table"></table></div>
+      </details>
+    </section>
+
+    <div class="split">
+      <div class="stack">
+        <!-- Downtime Pareto across the whole line -->
+        <section class="panel" aria-labelledby="pareto-title">
+          <div class="panel-head">
+            <h2 id="pareto-title">Downtime by reason</h2>
+            <span class="muted small" id="pareto-window"></span>
+          </div>
+          <div id="pareto"></div>
+        </section>
+
+        <!-- Where quality losses happen -->
+        <section class="panel" aria-labelledby="scrap-title">
+          <div class="panel-head">
+            <h2 id="scrap-title">Scrap by station</h2>
+            <span class="muted small">Count &middot; % of parts processed there</span>
+          </div>
+          <div id="scrap"></div>
+        </section>
+      </div>
+
+      <!-- Recent modules (WIP) -->
+      <section class="panel" aria-labelledby="recent-title">
+        <div class="panel-head">
+          <h2 id="recent-title">Recent modules</h2>
+          <span class="muted small">Click a row to trace it</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data recent" id="recent"></table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Genealogy / traceability -->
+    <section class="panel" aria-labelledby="trace-title">
+      <div class="panel-head">
+        <h2 id="trace-title">Module genealogy</h2>
+      </div>
+      <form class="search" id="search-form" autocomplete="off">
+        <input id="search-input" type="text" placeholder="Serial number, e.g. FS-20261022-00001"
+               aria-label="Module serial number" spellcheck="false">
+        <button type="submit" class="primary">Trace</button>
+      </form>
+      <div id="genealogy" aria-live="polite">
+        <p class="muted">Search for a serial number, or pick one from <em>Recent modules</em>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Simulator (ISA-95 L2) &rarr; ASP.NET Core API &rarr; SQL Server &rarr; this dashboard (L3)</span>
+    <a href="swagger">API docs (Swagger)</a>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

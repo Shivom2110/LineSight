@@ -40,7 +40,8 @@ never talks to the database directly.
 | `LineSight.Api` | REST endpoints, input validation, HTTP status mapping, DI, Swagger. |
 | `LineSight.Simulator` | Console app that plays the PLC layer: station states, WIP buffers, breakdowns, scrap, serials. |
 | `LineSight.Dashboard` | WPF app (XAML + MVVM with CommunityToolkit.Mvvm): live station cards and a genealogy search. |
-| `tests/LineSight.Tests` | 97 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
+| `LineSight.Api/wwwroot` | Browser dashboard (plain HTML/CSS/JS, no build step) served by the API, using the same REST endpoints. |
+| `tests/LineSight.Tests` | 101 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
 
 ### Why is the OEE math split between SQL and C#?
 
@@ -100,6 +101,7 @@ OEE          = Availability × Performance × Quality
 | `POST /api/modules/{serial}/steps` | Record a module passing or being scrapped at a station | 400 on a bad serial or unknown station; 409 on a skipped station, scrapped/completed module or duplicate serial |
 | `GET /api/stations` | All stations with their current state | |
 | `GET /api/oee/{stationId}?from=&to=` | OEE breakdown and downtime reasons (default window: the last hour) | 400 on a bad window, 404 on an unknown station |
+| `GET /api/modules?take=20` | Most recent modules with their last station | 400 if take isn't between 1 and 100 |
 | `GET /api/modules/{serial}` | Module genealogy, in station order | 404 if the serial isn't found |
 
 Swagger UI: <http://localhost:5080/swagger>
@@ -152,14 +154,27 @@ Settings live in `src/LineSight.Simulator/appsettings.json`: `ApiBaseUrl`, `Tick
 simulator runs: it queues messages, retries with exponential backoff (1 s, 2 s, 4 s … up to
 30 s) and catches up without losing an event.
 
-### 4. Start the dashboard (Windows)
+### 4. Open the web dashboard (any OS)
+
+The API also serves a browser dashboard. Once the API is running, open **<http://localhost:5080>**.
+It shows:
+- live station states and OEE (A/P/Q) with trend sparklines
+- downtime and scrap charts
+- the most recent modules
+- a genealogy timeline: click a module, or deep-link with `/?serial=FS-…`
+
+Window picker: 15 min, 1 h or 8 h. Light and dark themes.
+
+![LineSight web dashboard](docs/web-dashboard.png)
+
+### 5. Start the WPF dashboard (Windows)
 
 ```powershell
 dotnet run --project src/LineSight.Dashboard
 # different API address:  $env:LINESIGHT_API_URL = "http://otherhost:5080"
 ```
 
-![LineSight dashboard](docs/dashboard-placeholder.svg)
+![LineSight WPF dashboard](docs/dashboard-placeholder.svg)
 <!-- Screenshot placeholder (wireframe of the real layout). Run the dashboard with the simulator going,
      save a capture as docs/dashboard.png and point the image link above at it. -->
 
@@ -169,7 +184,7 @@ dotnet run --project src/LineSight.Dashboard
 dotnet test
 ```
 
-There are 97 tests and none of them need a database: Core logic is tested directly, and the API
+There are 101 tests and none of them need a database: Core logic is tested directly, and the API
 is hosted in memory with `WebApplicationFactory`, with the SQL repositories swapped for
 in-memory fakes. Coverage includes:
 - **OEE:** each factor on its own, normal, perfect, zero run time, zero count, all scrap, the >100% flag, rounding and precision

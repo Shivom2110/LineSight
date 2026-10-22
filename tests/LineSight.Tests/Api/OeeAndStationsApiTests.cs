@@ -54,4 +54,14 @@ public sealed class OeeAndStationsApiTests : IDisposable
         Assert.NotNull(stations);
         Assert.Equal(TestLine.Stations.Select(s => s.Name), stations.Select(s => s.Name));
     }
+
+    [Fact]
+    public async Task Root_ServesTheBrowserDashboard()
+    {
+        var response = await _client.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("LineSight", await response.Content.ReadAsStringAsync());
+    }
 }
