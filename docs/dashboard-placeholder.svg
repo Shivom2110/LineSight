@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="980" height="520" fill="#F3F5F8"/>
+<text x="24" y="44" font-size="24" font-weight="700" fill="#1F4E79">LineSight</text>
+<text x="24" y="64" font-size="12" fill="#6B7280">Rolling OEE - last 15 minutes</text>
+<circle cx="790" cy="44" r="5" fill="#2E9E5B"/><text x="802" y="48" font-size="12" fill="#111">Live - updated 14:32:07</text>
+<rect x="24" y="80" width="178" height="220" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="38" y="108" font-size="15" font-weight="600" fill="#111">Deposition</text>
+<rect x="38" y="118" width="74" height="22" rx="11" fill="#2E9E5B"/><text x="75" y="134" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Running</text>
+<text x="38" y="168" font-size="11" fill="#6B7280">OEE</text>
+<text x="38" y="200" font-size="28" font-weight="700" fill="#111">84.2%</text><text x="38" y="226" font-size="10" fill="#6B7280">Availability</text><rect x="106" y="219" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="106" y="219" width="60" height="6" rx="3" fill="#1F4E79"/><text x="38" y="248" font-size="10" fill="#6B7280">Performance</text><rect x="106" y="241" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="106" y="241" width="67" height="6" rx="3" fill="#1F4E79"/><text x="38" y="270" font-size="10" fill="#6B7280">Quality</text><rect x="106" y="263" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="106" y="263" width="74" height="6" rx="3" fill="#1F4E79"/><rect x="214" y="80" width="178" height="220" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="228" y="108" font-size="15" font-weight="600" fill="#111">Laser Scribe</text>
+<rect x="228" y="118" width="74" height="22" rx="11" fill="#2E9E5B"/><text x="265" y="134" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Running</text>
+<text x="228" y="168" font-size="11" fill="#6B7280">OEE</text>
+<text x="228" y="200" font-size="28" font-weight="700" fill="#111">79.5%</text><text x="228" y="226" font-size="10" fill="#6B7280">Availability</text><rect x="296" y="219" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="296" y="219" width="67" height="6" rx="3" fill="#1F4E79"/><text x="228" y="248" font-size="10" fill="#6B7280">Performance</text><rect x="296" y="241" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="296" y="241" width="74" height="6" rx="3" fill="#1F4E79"/><text x="228" y="270" font-size="10" fill="#6B7280">Quality</text><rect x="296" y="263" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="296" y="263" width="63" height="6" rx="3" fill="#1F4E79"/><rect x="404" y="80" width="178" height="220" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="418" y="108" font-size="15" font-weight="600" fill="#111">Lamination</text>
+<rect x="418" y="118" width="74" height="22" rx="11" fill="#D64545"/><text x="455" y="134" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Down</text>
+<text x="418" y="168" font-size="11" fill="#6B7280">OEE</text>
+<text x="418" y="200" font-size="28" font-weight="700" fill="#111">61.0%</text><text x="418" y="226" font-size="10" fill="#6B7280">Availability</text><rect x="486" y="219" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="486" y="219" width="74" height="6" rx="3" fill="#1F4E79"/><text x="418" y="248" font-size="10" fill="#6B7280">Performance</text><rect x="486" y="241" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="486" y="241" width="63" height="6" rx="3" fill="#1F4E79"/><text x="418" y="270" font-size="10" fill="#6B7280">Quality</text><rect x="486" y="263" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="486" y="263" width="70" height="6" rx="3" fill="#1F4E79"/><rect x="594" y="80" width="178" height="220" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="608" y="108" font-size="15" font-weight="600" fill="#111">Electrical Test</text>
+<rect x="608" y="118" width="74" height="22" rx="11" fill="#E0A800"/><text x="645" y="134" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Idle</text>
+<text x="608" y="168" font-size="11" fill="#6B7280">OEE</text>
+<text x="608" y="200" font-size="28" font-weight="700" fill="#111">58.7%</text><text x="608" y="226" font-size="10" fill="#6B7280">Availability</text><rect x="676" y="219" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="676" y="219" width="63" height="6" rx="3" fill="#1F4E79"/><text x="608" y="248" font-size="10" fill="#6B7280">Performance</text><rect x="676" y="241" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="676" y="241" width="70" height="6" rx="3" fill="#1F4E79"/><text x="608" y="270" font-size="10" fill="#6B7280">Quality</text><rect x="676" y="263" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="676" y="263" width="77" height="6" rx="3" fill="#1F4E79"/><rect x="784" y="80" width="178" height="220" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="798" y="108" font-size="15" font-weight="600" fill="#111">Pack</text>
+<rect x="798" y="118" width="74" height="22" rx="11" fill="#2E9E5B"/><text x="835" y="134" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Running</text>
+<text x="798" y="168" font-size="11" fill="#6B7280">OEE</text>
+<text x="798" y="200" font-size="28" font-weight="700" fill="#111">71.3%</text><text x="798" y="226" font-size="10" fill="#6B7280">Availability</text><rect x="866" y="219" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="866" y="219" width="70" height="6" rx="3" fill="#1F4E79"/><text x="798" y="248" font-size="10" fill="#6B7280">Performance</text><rect x="866" y="241" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="866" y="241" width="77" height="6" rx="3" fill="#1F4E79"/><text x="798" y="270" font-size="10" fill="#6B7280">Quality</text><rect x="866" y="263" width="80" height="6" rx="3" fill="#E5E9EF"/><rect x="866" y="263" width="66" height="6" rx="3" fill="#1F4E79"/>
+<rect x="24" y="316" width="932" height="180" rx="8" fill="#fff" stroke="#DDE2E8"/>
+<text x="40" y="344" font-size="15" font-weight="600" fill="#111">Module genealogy</text>
+<rect x="40" y="356" width="220" height="26" fill="#fff" stroke="#B8C0CC"/><text x="48" y="374" font-size="12" fill="#111">FS-20261022-52113</text>
+<rect x="270" y="356" width="70" height="26" fill="#1F4E79"/><text x="305" y="374" font-size="12" fill="#fff" text-anchor="middle">Search</text>
+<text x="40" y="408" font-size="12" fill="#111">#   Station            Result   Time (local)</text>
+<text x="40" y="428" font-size="12" fill="#333">1   Deposition         Pass     2026-10-22 14:30:51.035</text>
+<text x="40" y="448" font-size="12" fill="#333">2   Laser Scribe       Pass     2026-10-22 14:30:53.035</text>
+<text x="40" y="468" font-size="12" fill="#333">3   Lamination         Pass     2026-10-22 14:30:56.036</text>
+<rect x="600" y="400" width="340" height="80" rx="6" fill="#FFF7E6" stroke="#E0A800" stroke-dasharray="6 4"/>
+<text x="770" y="432" font-size="13" font-weight="600" fill="#8A5A00" text-anchor="middle">Wireframe placeholder</text>
+<text x="770" y="452" font-size="11" fill="#8A5A00" text-anchor="middle">Replace with a real screenshot (docs/dashboard.png)</text>
+</svg>
