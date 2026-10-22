@@ -49,4 +49,8 @@ public static class OeeCalculator
 
         return (double)goodCount / totalCount;
     }
+
+    /// <summary>Combines the three factors into an <see cref="OeeResult"/>.</summary>
+    public static OeeResult Calculate(OeeInput input) =>
+        throw new NotImplementedException();
 }
