@@ -64,3 +64,6 @@ public sealed record SimulationStatusResponse(
     DateTime? StartedUtc,
     DateTime? StopsAtUtc,
     long Ticks);
+
+/// <summary>GET /api/version - which build is running (Commit is the git SHA when built from a repo).</summary>
+public sealed record VersionResponse(string Version, string? Commit);

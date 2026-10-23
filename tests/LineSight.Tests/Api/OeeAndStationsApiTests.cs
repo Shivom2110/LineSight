@@ -64,4 +64,14 @@ public sealed class OeeAndStationsApiTests : IDisposable
         Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
         Assert.Contains("LineSight", await response.Content.ReadAsStringAsync());
     }
+
+    [Fact]
+    public async Task Version_ReportsTheBuild()
+    {
+        // The deploy pipeline compares "commit" with the pushed SHA to prove the new build is live.
+        var version = await _client.GetFromJsonAsync<VersionResponse>("/api/version", LineSightJson.Options);
+
+        Assert.NotNull(version);
+        Assert.False(string.IsNullOrWhiteSpace(version.Version));
+    }
 }
