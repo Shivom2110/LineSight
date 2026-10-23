@@ -31,11 +31,9 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger stays on in every environment: this is a portfolio API meant to be explored.
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Serves the browser dashboard from wwwroot/ at http://localhost:5080/
 app.UseDefaultFiles();
