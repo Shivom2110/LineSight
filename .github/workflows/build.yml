@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     # windows-latest because the WPF dashboard targets net8.0-windows.
@@ -27,3 +30,73 @@ jobs:
       # Unit + API tests use in-memory fakes, so no SQL Server is needed in CI.
       - name: Test
         run: dotnet test LineSight.sln --no-build --configuration Release --verbosity normal
+
+      # Build once, deploy the exact bits that were tested.
+      - name: Publish API
+        run: dotnet publish src/LineSight.Api/LineSight.Api.csproj --configuration Release --no-build --output publish
+
+      - name: Upload API package
+        uses: actions/upload-artifact@v4
+        with:
+          name: linesight-api
+          path: publish
+          retention-days: 7
+
+  deploy:
+    # Continuous deployment: every push to main that passes the tests goes live.
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: production          # never run two deploys at once
+    environment:
+      name: production
+      url: https://linesight-shivom.azurewebsites.net
+    permissions:
+      contents: read
+      id-token: write                # lets GitHub issue the OIDC token Azure trusts (no stored password)
+
+    env:
+      RESOURCE_GROUP: rg-linesight
+      APP_NAME: linesight-shivom
+      SITE_URL: https://linesight-shivom.azurewebsites.net
+
+    steps:
+      - name: Download API package
+        uses: actions/download-artifact@v4
+        with:
+          name: linesight-api
+          path: publish
+
+      - name: Zip package
+        run: cd publish && zip -qr ../app.zip .
+
+      # Signs in as a user-assigned managed identity whose federated credential trusts this
+      # repository's production environment. It may only deploy to this one web app.
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure App Service
+        run: |
+          az webapp deploy --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" \
+            --src-path app.zip --type zip --async true
+
+      # Prove the new build is live: /api/version must report the commit we just pushed.
+      # Free-tier cold starts are slow, so allow up to ~6 minutes.
+      - name: Smoke test
+        run: |
+          for attempt in $(seq 1 36); do
+            body=$(curl -s --max-time 30 "$SITE_URL/api/version" || true)
+            echo "attempt $attempt: $body"
+            if echo "$body" | grep -q "$GITHUB_SHA"; then
+              curl -sf --max-time 60 "$SITE_URL/api/stations" > /dev/null
+              echo "Build $GITHUB_SHA is live and the API can reach the database."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Deployed build did not come up in time." >&2
+          exit 1

@@ -499,6 +499,13 @@ $('theme-toggle').addEventListener('click', () => {
 applyStoredTheme();
 refresh();
 
+// Footer: which build is live (commit SHA links to GitHub).
+api('/api/version').then((v) => {
+  if (!v?.commit) return;
+  const sha = v.commit.slice(0, 7);
+  $('build').innerHTML = `Build <a href="https://github.com/Shivom2110/LineSight/commit/${esc(v.commit)}">${esc(sha)}</a> · `;
+}).catch(() => { /* footer detail only */ });
+
 // Deep link: /?serial=FS-20261022-00001 opens that module's genealogy straight away.
 const linkedSerial = new URLSearchParams(location.search).get('serial');
 if (linkedSerial) {
