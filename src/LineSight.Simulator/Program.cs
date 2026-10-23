@@ -1,3 +1,4 @@
+using LineSight.Simulation;
 using System.Threading.Channels;
 using LineSight.Simulator;
 using Microsoft.Extensions.Configuration;

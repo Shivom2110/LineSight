@@ -1,5 +1,6 @@
 using LineSight.Core.Models;
 using LineSight.Core.Traceability;
+using LineSight.Simulation;
 using LineSight.Simulator;
 using LineSight.Tests.Fakes;
 
@@ -10,7 +11,7 @@ public class SimulatedLineTests
     private static List<SimulatorMessage> Run(int ticks, int seed = 42)
     {
         var line = new SimulatedLine(TestLine.Stations,
-            new SimulatorOptions { ScrapRate = 0.05, DownChancePerTick = 0.01 }, new Random(seed));
+            new SimulationOptions { ScrapRate = 0.05, DownChancePerTick = 0.01 }, new Random(seed));
         var start = new DateTime(2026, 10, 22, 8, 0, 0, DateTimeKind.Utc);
 
         return Enumerable.Range(0, ticks)

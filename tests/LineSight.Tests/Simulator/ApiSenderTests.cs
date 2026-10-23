@@ -1,6 +1,7 @@
 using System.Net;
 using LineSight.Core.Contracts;
 using LineSight.Core.Models;
+using LineSight.Simulation;
 using LineSight.Simulator;
 
 namespace LineSight.Tests.Simulator;

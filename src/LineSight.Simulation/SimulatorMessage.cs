@@ -1,6 +1,6 @@
 using LineSight.Core.Contracts;
 
-namespace LineSight.Simulator;
+namespace LineSight.Simulation;
 
 /// <summary>Something the simulated PLC layer needs to send to the MES API.</summary>
 public abstract record SimulatorMessage;

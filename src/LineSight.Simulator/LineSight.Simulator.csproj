@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LineSight.Core\LineSight.Core.csproj" />
+    <ProjectReference Include="..\LineSight.Simulation\LineSight.Simulation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

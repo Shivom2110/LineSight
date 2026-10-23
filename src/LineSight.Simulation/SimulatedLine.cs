@@ -2,7 +2,7 @@ using LineSight.Core.Contracts;
 using LineSight.Core.Models;
 using LineSight.Core.Traceability;
 
-namespace LineSight.Simulator;
+namespace LineSight.Simulation;
 
 /// <summary>
 /// The simulated line (the "PLC layer"). Pure logic: no I/O, deterministic for a given Random seed.
@@ -11,7 +11,7 @@ namespace LineSight.Simulator;
 ///  - Down    : a random breakdown with a downtime reason, lasting a few ticks
 ///  - Idle    : starved (empty buffer) or blocked (the next station's buffer is full)
 ///  - Running : works at 85-100% of its ideal speed, finishing modules as its progress passes 1.0
-/// Finished modules are scrapped at <see cref="SimulatorOptions.ScrapRate"/>, otherwise passed downstream.
+/// Finished modules are scrapped at <see cref="SimulationOptions.ScrapRate"/>, otherwise passed downstream.
 /// </summary>
 public sealed class SimulatedLine
 {
@@ -21,13 +21,13 @@ public sealed class SimulatedLine
     private const int MaxDownTicks = 15;
 
     private readonly List<StationSim> _stations;
-    private readonly SimulatorOptions _options;
+    private readonly SimulationOptions _options;
     private readonly Random _random;
 
     private DateOnly _serialDate;
     private int _nextSerial;
 
-    public SimulatedLine(IReadOnlyList<Station> stations, SimulatorOptions options, Random random)
+    public SimulatedLine(IReadOnlyList<Station> stations, SimulationOptions options, Random random)
     {
         _stations = stations.OrderBy(s => s.Sequence).Select(s => new StationSim(s)).ToList();
         _options = options;

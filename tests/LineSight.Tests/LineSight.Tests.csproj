@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\LineSight.Core\LineSight.Core.csproj" />
     <ProjectReference Include="..\..\src\LineSight.Api\LineSight.Api.csproj" />
     <ProjectReference Include="..\..\src\LineSight.Simulator\LineSight.Simulator.csproj" />
+    <ProjectReference Include="..\..\src\LineSight.Simulation\LineSight.Simulation.csproj" />
   </ItemGroup>
 
 </Project>
