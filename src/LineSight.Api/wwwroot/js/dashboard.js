@@ -80,9 +80,10 @@ async function refresh() {
 
   try {
     const stations = await api('/api/stations');
-    const [oees, recent] = await Promise.all([
+    const [oees, recent, simulation] = await Promise.all([
       Promise.all(stations.map((s) => api(`/api/oee/${s.id}?${range}`))),
       api('/api/modules?take=10'),
+      api('/api/simulation'),
     ]);
 
     state.stations = stations;
@@ -101,6 +102,7 @@ async function refresh() {
     renderPareto();
     renderScrap();
     renderRecent(recent ?? []);
+    renderSimulation(simulation);
     setConnection(true, `Live · updated ${to.toLocaleTimeString()}`);
   } catch (error) {
     setConnection(false, 'API unreachable – retrying');
@@ -342,7 +344,7 @@ function renderScrap() {
 
 function renderRecent(modules) {
   if (modules.length === 0) {
-    $('recent').innerHTML = '<tbody><tr><td class="muted">No modules yet – start the simulator.</td></tr></tbody>';
+    $('recent').innerHTML = '<tbody><tr><td class="muted">No modules yet – click <strong>Start simulation</strong>.</td></tr></tbody>';
     return;
   }
   $('recent').innerHTML = `
@@ -420,6 +422,39 @@ function genealogyView(module) {
     </div>
     <div class="timeline">${timeline}</div>`;
 }
+
+// ---------------------------------------------------------------- simulation button
+
+let simulation = null;   // last SimulationStatusResponse
+
+function renderSimulation(status) {
+  simulation = status;
+  const button = $('sim-button');
+  const running = Boolean(status?.running);
+  button.classList.toggle('running', running);
+
+  let label = 'Start simulation';
+  if (running) {
+    const left = Math.max(0, Math.round((new Date(status.stopsAtUtc) - Date.now()) / 1000));
+    label = `Stop simulation <span class="sim-time">${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} left</span>`;
+  }
+  button.querySelector('.sim-label').innerHTML = label;
+}
+
+$('sim-button').addEventListener('click', async () => {
+  const button = $('sim-button');
+  const path = simulation?.running ? '/api/simulation/stop' : '/api/simulation/start?minutes=10';
+  button.disabled = true;
+  try {
+    const response = await fetch(path, { method: 'POST' });
+    if (response.ok) renderSimulation(await response.json());
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Keep the countdown ticking between data refreshes.
+setInterval(() => { if (simulation?.running) renderSimulation(simulation); }, 1000);
 
 // ---------------------------------------------------------------- controls
 

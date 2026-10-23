@@ -38,10 +38,11 @@ never talks to the database directly.
 | `LineSight.Core` | Domain models, OEE math, routing/traceability rules, validation, repository interfaces, API contracts. No database, no UI. |
 | `LineSight.Data` | SQL Server implementation of the repository interfaces (Dapper). Every call is a stored procedure. |
 | `LineSight.Api` | REST endpoints, input validation, HTTP status mapping, DI, Swagger. |
-| `LineSight.Simulator` | Console app that plays the PLC layer: station states, WIP buffers, breakdowns, scrap, serials. |
+| `LineSight.Simulation` | The simulated line itself (pure logic): station states, WIP buffers, breakdowns, scrap, serials. |
+| `LineSight.Simulator` | Console app that runs the simulated line and sends its data to the API over HTTP (retry + backoff). |
 | `LineSight.Dashboard` | WPF app (XAML + MVVM with CommunityToolkit.Mvvm): live station cards and a genealogy search. |
 | `LineSight.Api/wwwroot` | Browser dashboard (plain HTML/CSS/JS, no build step) served by the API, using the same REST endpoints. |
-| `tests/LineSight.Tests` | 101 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
+| `tests/LineSight.Tests` | 108 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
 
 ### Why is the OEE math split between SQL and C#?
 
@@ -101,6 +102,9 @@ OEE          = Availability × Performance × Quality
 | `POST /api/modules/{serial}/steps` | Record a module passing or being scrapped at a station | 400 on a bad serial or unknown station; 409 on a skipped station, scrapped/completed module or duplicate serial |
 | `GET /api/stations` | All stations with their current state | |
 | `GET /api/oee/{stationId}?from=&to=` | OEE breakdown and downtime reasons (default window: the last hour) | 400 on a bad window, 404 on an unknown station |
+| `GET /api/simulation` | Status of the simulator built into the API | |
+| `POST /api/simulation/start?minutes=10` | Start the built-in simulator (stops itself after 1–60 min; calling again extends it) | 400 if minutes is out of range |
+| `POST /api/simulation/stop` | Stop the built-in simulator | |
 | `GET /api/modules?take=20` | Most recent modules with their last station | 400 if take isn't between 1 and 100 |
 | `GET /api/modules/{serial}` | Module genealogy, in station order | 404 if the serial isn't found |
 
@@ -141,7 +145,15 @@ export ConnectionStrings__LineSight='Server=localhost,1433;Database=LineSight;Us
 dotnet run --project src/LineSight.Api --launch-profile http     # http://localhost:5080/swagger
 ```
 
-### 3. Start the simulator (the PLC layer)
+### 3. Feed it data: the simulator (the PLC layer)
+
+**Easiest:** open the dashboard (step 4) and click **▶ Start simulation**. The API runs the simulated
+line itself for 10 minutes. It writes through the same repositories and routing rules as the HTTP
+endpoints, then stops on its own.
+
+**Or** run the standalone console simulator. It talks to the API over HTTP like real PLC gateways would,
+with retry and backoff. Use one or the other, not both at once, because both number new serials the
+same way and would clash.
 
 ```bash
 dotnet run --project src/LineSight.Simulator
@@ -184,13 +196,14 @@ dotnet run --project src/LineSight.Dashboard
 dotnet test
 ```
 
-There are 101 tests and none of them need a database: Core logic is tested directly, and the API
+There are 108 tests and none of them need a database: Core logic is tested directly, and the API
 is hosted in memory with `WebApplicationFactory`, with the SQL repositories swapped for
 in-memory fakes. Coverage includes:
 - **OEE:** each factor on its own, normal, perfect, zero run time, zero count, all scrap, the >100% flag, rounding and precision
 - **Traceability:** correct order, skipped station, duplicate serial, unknown station, scrapped or completed module, genealogy order, serial format
 - **Validation and API:** Down without a reason, bad payloads (400), unknown station/module (404), routing conflicts (409)
 - **Simulator:** backoff, retry without data loss, no retry on 4xx, and generated module flow replayed through the real routing rules
+- **Built-in simulation:** start, stop, extend, auto-stop after the time limit (using `FakeTimeProvider`), and out-of-range durations
 
 The work was done test-first. The git history shows each `test: add failing …` commit before the
 `feat: implement …` commit that makes it pass (`git log --oneline`).

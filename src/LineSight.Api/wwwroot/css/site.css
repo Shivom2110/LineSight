@@ -100,6 +100,21 @@ a { color: var(--accent); }
 }
 .segmented button.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); font-weight: 600; }
 
+.sim-button {
+  display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; font-weight: 600;
+  padding: 7px 14px; border-radius: 9px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: #fff;
+}
+.sim-button .sim-icon { /* play triangle */
+  width: 0; height: 0; border-left: 8px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+}
+.sim-button.running { background: var(--surface); color: var(--text); border-color: var(--border); }
+.sim-button.running .sim-icon { /* stop square */
+  width: 9px; height: 9px; border: 0; border-radius: 2px; background: var(--critical);
+}
+.sim-button:disabled { opacity: .6; cursor: progress; }
+.sim-time { font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+
 .connection { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; min-width: 150px; }
 .connection .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
 .connection.live .dot { background: var(--good); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 20%, transparent); }

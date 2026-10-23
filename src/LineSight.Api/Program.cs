@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
+using LineSight.Api.Simulation;
 using LineSight.Core.Traceability;
 using LineSight.Data;
+using LineSight.Simulation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,11 @@ var connectionString = builder.Configuration.GetConnectionString("LineSight")
 builder.Services.AddLineSightData(connectionString);       // SQL Server repositories (stored procedures)
 builder.Services.AddScoped<TraceabilityService>();         // routing rules from LineSight.Core
 builder.Services.AddSingleton(TimeProvider.System);        // injectable clock -> deterministic tests
+
+// Embedded line simulator behind the dashboard's Start/Stop button (one instance, stopped on shutdown).
+builder.Services.Configure<SimulationOptions>(builder.Configuration.GetSection("Simulation"));
+builder.Services.AddSingleton<SimulationRunner>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SimulationRunner>());
 
 var app = builder.Build();
 
