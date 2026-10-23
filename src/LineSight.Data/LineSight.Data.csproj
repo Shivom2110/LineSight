@@ -8,6 +8,7 @@
     <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -15,5 +16,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ship the database scripts inside the assembly so the app can set up its own database. -->
+    <EmbeddedResource Include="..\..\database\*.sql" LogicalName="LineSight.Data.Scripts.%(Filename)%(Extension)" />
+  </ItemGroup>
 
 </Project>

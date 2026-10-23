@@ -29,6 +29,11 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<SimulationRunner>(
 
 var app = builder.Build();
 
+// Cloud deployments set Database__InitializeOnStartup=true: create the schema on an empty database
+// and refresh the stored procedures, so no manual SQL step is needed after a deploy.
+if (app.Configuration.GetValue<bool>("Database:InitializeOnStartup"))
+    await app.Services.GetRequiredService<DatabaseInitializer>().InitializeAsync();
+
 app.UseExceptionHandler();
 
 // Swagger stays on in every environment: this is a portfolio API meant to be explored.

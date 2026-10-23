@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
         services.AddSingleton(new SqlConnectionFactory(connectionString));
+        services.AddSingleton<DatabaseInitializer>();
         services.AddScoped<IStationRepository, SqlStationRepository>();
         services.AddScoped<IMachineEventRepository, SqlMachineEventRepository>();
         services.AddScoped<IModuleRepository, SqlModuleRepository>();

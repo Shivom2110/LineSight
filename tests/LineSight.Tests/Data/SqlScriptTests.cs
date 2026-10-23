@@ -44,4 +44,18 @@ public class SqlScriptTests
         Assert.Contains(procedures, b => b.Contains("CREATE OR ALTER PROCEDURE dbo.usp_GetModuleGenealogy"));
         Assert.Contains(procedures, b => b.Contains("CREATE OR ALTER PROCEDURE dbo.usp_RecordMachineEvent"));
     }
+
+    [Theory]
+    [InlineData("USE LineSight;", true)]
+    [InlineData("  use [LineSight]", true)]
+    [InlineData("IF DB_ID(N'LineSight') IS NULL\n    CREATE DATABASE LineSight;", true)]
+    [InlineData("CREATE TABLE dbo.Stations (Id INT);", false)]
+    [InlineData("-- we USE indexes here\nSELECT 1;", false)]
+    [InlineData("/* ===== header ===== */\n\nUSE LineSight;", true)]        // the real shape of procedures.sql's first batch
+    [InlineData("-- note\n/* more */\n  USE LineSight;", true)]
+    public void SelectsDatabase_DetectsBatchesThatPickTheDatabase(string batch, bool expected)
+    {
+        // The app runs scripts against the database in its connection string, so these are skipped.
+        Assert.Equal(expected, SqlScript.SelectsDatabase(batch));
+    }
 }
