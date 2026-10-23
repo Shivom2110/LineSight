@@ -2,6 +2,9 @@
 
 [![build](https://github.com/Shivom2110/LineSight/actions/workflows/build.yml/badge.svg)](https://github.com/Shivom2110/LineSight/actions/workflows/build.yml)
 
+**▶ Live demo: <https://linesight-shivom.azurewebsites.net>.** Click **Start simulation** and watch the line run.
+*It's hosted on Azure's free tiers, so after a quiet period the first load can take 30–60 s while the app and database wake up.*
+
 LineSight is a small Manufacturing Execution System (MES) for a simulated 5-station thin-film
 solar module line (Deposition → Laser Scribe → Lamination → Electrical Test → Pack). A simulated
 PLC layer reports machine state, good/scrap counts and module serial numbers. LineSight stores
@@ -47,7 +50,7 @@ never talks to the database directly.
 | `LineSight.Simulator` | Console app that runs the simulated line and sends its data to the API over HTTP (retry + backoff). |
 | `LineSight.Dashboard` | WPF app (XAML + MVVM with CommunityToolkit.Mvvm): live station cards and a genealogy search. |
 | `LineSight.Api/wwwroot` | Browser dashboard (plain HTML/CSS/JS, no build step) served by the API, using the same REST endpoints. |
-| `tests/LineSight.Tests` | 108 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
+| `tests/LineSight.Tests` | 119 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
 
 ### Why is the OEE math split between SQL and C#?
 
@@ -195,19 +198,50 @@ dotnet run --project src/LineSight.Dashboard
 <!-- Screenshot placeholder (wireframe of the real layout). Run the dashboard with the simulator going,
      save a capture as docs/dashboard.png and point the image link above at it. -->
 
+## Deployment (Azure)
+
+The live demo runs on **Azure App Service** (Linux, .NET 8, Free F1 plan) with **Azure SQL Database**
+(serverless, free offer) in `canadacentral`.
+
+- **No manual SQL step.** With `Database__InitializeOnStartup=true`, the app creates the schema on an
+  empty database and re-applies `procedures.sql` (`CREATE OR ALTER`) on every start, so the stored
+  procedures always match the deployed code. Existing tables are never dropped. The `.sql` files are
+  embedded in `LineSight.Data`.
+- **Built for a database that pauses.** The serverless database pauses when idle. SqlClient's exponential
+  retry (`SqlConnectionFactory`) rides out error 40613 while it resumes, so the first request is slow
+  instead of failing.
+- **Secrets stay out of the repo.** The connection string is an App Service connection-string setting,
+  the database firewall only admits Azure services, and the site is HTTPS-only.
+
+```bash
+az group create -n rg-linesight -l canadacentral
+az sql server create -g rg-linesight -n <sql-server> --admin-user <admin> --admin-password <password>
+az sql db create -g rg-linesight -s <sql-server> -n LineSight --edition GeneralPurpose --compute-model Serverless \
+  --family Gen5 --capacity 2 --use-free-limit --free-limit-exhaustion-behavior AutoPause
+az sql server firewall-rule create -g rg-linesight -s <sql-server> -n AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+az appservice plan create -g rg-linesight -n plan-linesight --is-linux --sku F1
+az webapp create -g rg-linesight -p plan-linesight -n <app-name> --runtime "DOTNETCORE:8.0"
+az webapp config connection-string set -g rg-linesight -n <app-name> --connection-string-type SQLAzure --settings LineSight="<connection string>"
+az webapp config appsettings set -g rg-linesight -n <app-name> --settings Database__InitializeOnStartup=true
+az webapp config set -g rg-linesight -n <app-name> --startup-file "dotnet LineSight.Api.dll"
+dotnet publish src/LineSight.Api -c Release -o publish && (cd publish && zip -r ../app.zip .)
+az webapp deploy -g rg-linesight -n <app-name> --src-path app.zip --type zip
+```
+
 ## Tests
 
 ```bash
 dotnet test
 ```
 
-There are 108 tests and none of them need a database: Core logic is tested directly, and the API
+There are 119 tests and none of them need a database: Core logic is tested directly, and the API
 is hosted in memory with `WebApplicationFactory`, with the SQL repositories swapped for
 in-memory fakes. Coverage includes:
 - **OEE:** each factor on its own, normal, perfect, zero run time, zero count, all scrap, the >100% flag, rounding and precision
 - **Traceability:** correct order, skipped station, duplicate serial, unknown station, scrapped or completed module, genealogy order, serial format
 - **Validation and API:** Down without a reason, bad payloads (400), unknown station/module (404), routing conflicts (409)
 - **Simulator:** backoff, retry without data loss, no retry on 4xx, and generated module flow replayed through the real routing rules
+- **Database scripts:** splitting on `GO`, skipping `USE`/`CREATE DATABASE` batches, and the embedded scripts
 - **Built-in simulation:** start, stop, extend, auto-stop after the time limit (using `FakeTimeProvider`), and out-of-range durations
 
 The work was done test-first. The git history shows each `test: add failing …` commit before the
@@ -235,6 +269,8 @@ The work was done test-first. The git history shows each `test: add failing …`
   comments from the floor.
 - **Role-based access:** authentication (e.g. Entra ID / JWT), with roles for operator,
   engineer and read-only.
+- **Continuous deployment:** add a deploy job to the GitHub Actions pipeline, using OIDC federated credentials.
+- **.NET 10:** .NET 8 support ends in November 2026; moving to .NET 10 LTS is a target-framework change.
 - **High event volume:** partition `MachineEvents` by month and archive old partitions; pre-aggregate hourly OEE.
 - **Real-time push:** send updates to the dashboard with SignalR instead of polling.
 - **Planned production time from a shift calendar,** so planned breaks don't count against Availability.
