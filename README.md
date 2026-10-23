@@ -10,6 +10,11 @@ running?** (OEE = Availability × Performance × Quality, plus a downtime breakd
 has this module been?** (serialized genealogy / WIP traceability with timestamps, with strict
 station order and a scrapped module never continuing). A WPF dashboard shows it all live.
 
+![LineSight demo: start the simulated line, watch OEE and downtime update live, then trace a scrapped module](docs/demo.gif)
+
+*Click **Start simulation**: five simulated PLCs feed the MES. OEE, downtime and scrap update live, and
+typing a serial number shows that module's genealogy, here passing two stations and then being scrapped at Lamination.*
+
 ## Architecture
 
 ```mermaid

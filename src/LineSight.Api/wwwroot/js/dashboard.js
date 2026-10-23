@@ -43,6 +43,9 @@ const time = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', mi
 const number = (n) => n.toLocaleString();
 const stateClass = (s) => (s ? s.toLowerCase() : 'unknown');
 
+/** True when the OEE window actually contains machine events (otherwise every ratio is a meaningless 0). */
+const hasData = (oee) => Boolean(oee) && oee.plannedProductionTimeSeconds > 0;
+
 /** GET JSON from the API. Returns null on 404, throws on other errors. */
 async function api(path) {
   const response = await fetch(path, { headers: { Accept: 'application/json' } });
@@ -88,8 +91,8 @@ async function refresh() {
 
     state.stations = stations;
     stations.forEach((s, i) => {
-      if (!oees[i]) return;
       state.oee.set(s.id, oees[i]);
+      if (!hasData(oees[i])) return;
       const points = state.history.get(s.id) ?? [];
       points.push({ t: to, oee: oees[i].oee });
       state.history.set(s.id, points.slice(-HISTORY_POINTS));
@@ -123,8 +126,13 @@ function setConnection(live, text) {
 // ---------------------------------------------------------------- KPIs
 
 function renderKpis() {
-  const results = state.stations.map((s) => state.oee.get(s.id)).filter(Boolean);
-  if (results.length === 0) return;
+  const results = state.stations.map((s) => state.oee.get(s.id)).filter(hasData);
+  if (results.length === 0) {
+    for (const id of ['kpi-oee', 'kpi-completed', 'kpi-scrap', 'kpi-downtime']) $(id).textContent = '–';
+    $('kpi-oee-note').textContent = `No machine data in the last ${windowLabel()}`;
+    for (const id of ['kpi-completed-note', 'kpi-scrap-note', 'kpi-downtime-note']) $(id).textContent = '\u00a0';
+    return;
+  }
 
   const avg = results.reduce((sum, r) => sum + r.oee, 0) / results.length;
   const first = state.oee.get(state.stations[0].id);
@@ -163,7 +171,8 @@ function renderLine() {
 }
 
 function stationCard(station) {
-  const oee = state.oee.get(station.id);
+  const raw = state.oee.get(station.id);
+  const oee = hasData(raw) ? raw : null;
   const cls = stateClass(station.currentState);
   const reason = station.currentState === 'Down'
     ? `<strong>${esc(station.downtimeReason)}</strong> · since ${esc(time(station.lastEventUtc))}`
@@ -249,7 +258,7 @@ function sparkHover(svg, id, event) {
 // Accessible table view of the same numbers.
 function renderStationTable() {
   const rows = state.stations.map((s) => {
-    const o = state.oee.get(s.id);
+    const o = hasData(state.oee.get(s.id)) ? state.oee.get(s.id) : null;
     return `<tr>
       <td>${s.sequence}. ${esc(s.name)}</td>
       <td>${esc(s.currentState ?? '–')}</td>
@@ -313,7 +322,7 @@ function renderPareto() {
 // ---------------------------------------------------------------- scrap by station
 
 function renderScrap() {
-  const rows = state.stations.map((s) => ({ station: s, oee: state.oee.get(s.id) })).filter((r) => r.oee);
+  const rows = state.stations.map((s) => ({ station: s, oee: state.oee.get(s.id) })).filter((r) => hasData(r.oee));
   const max = Math.max(...rows.map((r) => r.oee.scrapCount));
   if (rows.length === 0 || max === 0) {
     $('scrap').innerHTML = '<p class="muted">No scrap in this window.</p>';
