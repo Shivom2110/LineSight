@@ -57,3 +57,10 @@ public sealed record ModuleSummaryResponse(
     DateTime CreatedUtc,
     string? LastStation,
     DateTime? LastStepUtc);
+
+/// <summary>GET /api/simulation - state of the simulator embedded in the API.</summary>
+public sealed record SimulationStatusResponse(
+    bool Running,
+    DateTime? StartedUtc,
+    DateTime? StopsAtUtc,
+    long Ticks);

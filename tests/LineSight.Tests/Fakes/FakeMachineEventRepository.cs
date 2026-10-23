@@ -3,13 +3,22 @@ using LineSight.Core.Models;
 
 namespace LineSight.Tests.Fakes;
 
+/// <summary>Captures recorded events. Thread-safe because the embedded simulator writes from a background task.</summary>
 public sealed class FakeMachineEventRepository : IMachineEventRepository
 {
-    public List<MachineEvent> Events { get; } = [];
+    private readonly List<MachineEvent> _events = [];
+
+    public IReadOnlyList<MachineEvent> Events
+    {
+        get { lock (_events) return _events.ToList(); }
+    }
 
     public Task<long> RecordAsync(MachineEvent machineEvent, CancellationToken ct = default)
     {
-        Events.Add(machineEvent);
-        return Task.FromResult((long)Events.Count);
+        lock (_events)
+        {
+            _events.Add(machineEvent);
+            return Task.FromResult((long)_events.Count);
+        }
     }
 }
