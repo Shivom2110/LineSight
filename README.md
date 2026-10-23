@@ -50,7 +50,7 @@ never talks to the database directly.
 | `LineSight.Simulator` | Console app that runs the simulated line and sends its data to the API over HTTP (retry + backoff). |
 | `LineSight.Dashboard` | WPF app (XAML + MVVM with CommunityToolkit.Mvvm): live station cards and a genealogy search. |
 | `LineSight.Api/wwwroot` | Browser dashboard (plain HTML/CSS/JS, no build step) served by the API, using the same REST endpoints. |
-| `tests/LineSight.Tests` | 119 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
+| `tests/LineSight.Tests` | 120 xUnit tests (Core logic, simulator logic, and the API in memory with fake repositories). |
 
 ### Why is the OEE math split between SQL and C#?
 
@@ -69,7 +69,7 @@ never talks to the database directly.
 - **SQL Server** (LocalDB or Docker) with **T-SQL stored procedures**, called through **Dapper**
 - **WPF** with **XAML + MVVM** (CommunityToolkit.Mvvm: `ObservableObject`, `[ObservableProperty]`, `[RelayCommand]`)
 - **xUnit** (written test-first), `WebApplicationFactory` for in-memory API tests
-- **GitHub Actions** (YAML) CI on `windows-latest`
+- **GitHub Actions** (YAML) CI/CD: build and test on `windows-latest`, then deploy to Azure on every push to `main`
 
 ## Domain rules
 
@@ -198,6 +198,23 @@ dotnet run --project src/LineSight.Dashboard
 <!-- Screenshot placeholder (wireframe of the real layout). Run the dashboard with the simulator going,
      save a capture as docs/dashboard.png and point the image link above at it. -->
 
+## CI/CD
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on every push and pull request:
+
+1. **build-and-test** (`windows-latest`): restore, build (Release), run all tests, then publish the
+   API once and save it as a build artifact.
+2. **deploy** (pushes to `main` only, and only if the tests passed):
+   - Signs in to Azure with **OIDC**, so no password or publish profile is stored in GitHub. A
+     user-assigned managed identity trusts only this repository's `production` environment, and it
+     can only deploy to this one web app (Website Contributor role).
+   - Deploys the **same artifact that was tested**.
+   - **Smoke test:** waits until the live `/api/version` reports the commit just pushed, then checks
+     that the API can reach the database. If the new build never comes up, the deploy fails.
+
+The live build is shown in the dashboard footer and at
+[`/api/version`](https://linesight-shivom.azurewebsites.net/api/version).
+
 ## Deployment (Azure)
 
 The live demo runs on **Azure App Service** (Linux, .NET 8, Free F1 plan) with **Azure SQL Database**
@@ -234,7 +251,7 @@ az webapp deploy -g rg-linesight -n <app-name> --src-path app.zip --type zip
 dotnet test
 ```
 
-There are 119 tests and none of them need a database: Core logic is tested directly, and the API
+There are 120 tests and none of them need a database: Core logic is tested directly, and the API
 is hosted in memory with `WebApplicationFactory`, with the SQL repositories swapped for
 in-memory fakes. Coverage includes:
 - **OEE:** each factor on its own, normal, perfect, zero run time, zero count, all scrap, the >100% flag, rounding and precision
@@ -269,7 +286,7 @@ The work was done test-first. The git history shows each `test: add failing …`
   comments from the floor.
 - **Role-based access:** authentication (e.g. Entra ID / JWT), with roles for operator,
   engineer and read-only.
-- **Continuous deployment:** add a deploy job to the GitHub Actions pipeline, using OIDC federated credentials.
+- **Staging slot:** deploy to a staging slot first and swap it in after the smoke test, for zero-downtime releases (needs a paid App Service tier).
 - **.NET 10:** .NET 8 support ends in November 2026; moving to .NET 10 LTS is a target-framework change.
 - **High event volume:** partition `MachineEvents` by month and archive old partitions; pre-aggregate hourly OEE.
 - **Real-time push:** send updates to the dashboard with SignalR instead of polling.
